@@ -151,4 +151,141 @@ body {
     margin-bottom: 15px;
 
     text-align: center;
+}/* ÁREA INTERNA DO SISTEMA */
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    padding: 25px 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    color: #087f3f;
+    margin-bottom: 30px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar nav a {
+    padding: 12px;
+    text-decoration: none;
+    color: #374151;
+    border-radius: 7px;
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.ativo {
+    color: white;
+    background: linear-gradient(90deg, #00c853, #ff6d00);
+}
+
+.sair {
+    margin-top: auto;
+    text-decoration: none;
+    color: #dc2626;
+    padding: 12px;
+}
+
+.conteudo {
+    flex: 1;
+    padding: 35px;
+    background: #f7f8fa;
+}
+
+.conteudo h1 {
+    margin-bottom: 5px;
+}
+
+.subtitulo {
+    color: #6b7280;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.card h2 {
+    margin-bottom: 20px;
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    outline: none;
+    background: white;
+}
+
+.btn-salvar {
+    margin-top: 5px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 7px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(90deg, #00c853, #ff6d00);
+}
+
+.mensagem-sucesso {
+    color: #0a8f3d;
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+.tabela-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 13px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    color: #4b5563;
+    font-size: 14px;
+}
+
+@media (max-width: 800px) {
+
+    .grid-form {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        width: 170px;
+    }
+
 }
