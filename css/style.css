@@ -309,4 +309,41 @@ th {
     background: white;
     color: #374151;
     cursor: pointer;
+}/* CONSULTA DE ESTOQUE */
+
+.campo-pesquisa {
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    outline: none;
+}
+
+.campo-pesquisa:focus {
+    border-color: #00b84a;
+}
+
+.status-normal,
+.status-baixo {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.status-normal {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-baixo {
+    background: #fef3c7;
+    color: #a16207;
+}
+
+.nenhum-produto {
+    margin-top: 15px;
+    color: #6b7280;
 }

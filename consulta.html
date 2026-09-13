@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockLanche - Consulta de Estoque</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <h2>📦 StockLanche</h2>
+
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="produtos.html">Produtos</a>
+            <a href="consulta.html" class="ativo">Consulta</a>
+        </nav>
+
+        <a href="index.html" class="sair">Sair</a>
+    </aside>
+
+    <main class="conteudo">
+
+        <h1>Consulta de Estoque</h1>
+        <p class="subtitulo">
+            Visualize o estoque atual dos produtos
+        </p>
+
+        <section class="card">
+
+            <input
+                type="text"
+                id="pesquisaProduto"
+                class="campo-pesquisa"
+                placeholder="Buscar produto..."
+            >
+
+            <div class="tabela-container">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Quantidade Disponível</th>
+                            <th>Unidade</th>
+                            <th>Última Atualização</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tabelaConsulta">
+                    </tbody>
+                </table>
+
+            </div>
+
+            <p id="nenhumProduto" class="nenhum-produto"></p>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="js/consulta.js"></script>
+
+</body>
+</html>
