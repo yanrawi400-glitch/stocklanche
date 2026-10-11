@@ -8,10 +8,11 @@ const db = require("./database/database");
 const app = express();
 const PORT = 3000;
 
-// Permite comunicação entre front-end e API
-app.use(cors());
+// ======================================================
+// CONFIGURAÇÕES
+// ======================================================
 
-// Permite receber dados em JSON
+app.use(cors());
 app.use(express.json());
 
 // Disponibiliza os arquivos do front-end
@@ -104,7 +105,6 @@ app.post("/api/produtos", (req, res) => {
         quantidade
     } = req.body;
 
-    // Validação dos campos obrigatórios
     if (
         !nome ||
         !unidade ||
@@ -166,6 +166,7 @@ app.post("/api/produtos", (req, res) => {
             return res.status(201).json({
                 mensagem:
                     "Produto cadastrado com sucesso!",
+
                 produto: {
                     id: this.lastID,
                     nome: nome.trim(),
@@ -174,9 +175,54 @@ app.post("/api/produtos", (req, res) => {
                             ? descricao.trim()
                             : "",
                     unidade: unidade.trim(),
-                    quantidade:
-                        quantidadeNumerica
+                    quantidade: quantidadeNumerica
                 }
+            });
+        }
+    );
+});
+
+// ======================================================
+// LISTAGEM DE PRODUTOS
+// API05
+// ======================================================
+
+app.get("/api/produtos", (req, res) => {
+
+    const sql = `
+        SELECT
+            id,
+            nome,
+            descricao,
+            unidade,
+            quantidade,
+            data_cadastro,
+            ultima_atualizacao
+        FROM produtos
+        ORDER BY id DESC
+    `;
+
+    db.all(
+        sql,
+        [],
+        (erro, produtos) => {
+
+            if (erro) {
+
+                console.error(
+                    "Erro ao listar produtos:",
+                    erro
+                );
+
+                return res.status(500).json({
+                    mensagem:
+                        "Erro ao consultar produtos."
+                });
+            }
+
+            return res.json({
+                quantidade: produtos.length,
+                produtos: produtos
             });
         }
     );
@@ -187,6 +233,7 @@ app.post("/api/produtos", (req, res) => {
 // ======================================================
 
 app.listen(PORT, "0.0.0.0", () => {
+
     console.log(
         "----------------------------------"
     );
