@@ -40,13 +40,14 @@ app.get("/", (req, res) => {
 
 
 // ======================================================
-// TESTE DA API
+// STATUS
 // ======================================================
 
 app.get("/api/status", (req, res) => {
 
     res.json({
-        mensagem: "API StockLanche funcionando!"
+        mensagem:
+            "API StockLanche funcionando!"
     });
 });
 
@@ -74,11 +75,6 @@ app.post("/api/login", (req, res) => {
         (erro, usuario) => {
 
             if (erro) {
-
-                console.error(
-                    "Erro no banco:",
-                    erro
-                );
 
                 return res.status(500).json({
                     mensagem:
@@ -126,7 +122,7 @@ app.post("/api/login", (req, res) => {
 
 
 // ======================================================
-// CADASTRAR PRODUTO - API04
+// CADASTRO DE PRODUTO - API04
 // ======================================================
 
 app.post("/api/produtos", (req, res) => {
@@ -165,7 +161,8 @@ app.post("/api/produtos", (req, res) => {
         });
     }
 
-    const sql = `
+    db.run(
+        `
         INSERT INTO produtos
         (
             nome,
@@ -175,10 +172,7 @@ app.post("/api/produtos", (req, res) => {
             ultima_atualizacao
         )
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `;
-
-    db.run(
-        sql,
+        `,
 
         [
             nome.trim(),
@@ -192,11 +186,6 @@ app.post("/api/produtos", (req, res) => {
         function (erro) {
 
             if (erro) {
-
-                console.error(
-                    "Erro ao cadastrar produto:",
-                    erro
-                );
 
                 return res.status(500).json({
                     mensagem:
@@ -216,7 +205,8 @@ app.post("/api/produtos", (req, res) => {
                         descricao
                             ? descricao.trim()
                             : "",
-                    unidade: unidade.trim(),
+                    unidade:
+                        unidade.trim(),
                     quantidade:
                         quantidadeNumerica
                 }
@@ -227,12 +217,13 @@ app.post("/api/produtos", (req, res) => {
 
 
 // ======================================================
-// LISTAR PRODUTOS - API05
+// LISTAGEM - API05
 // ======================================================
 
 app.get("/api/produtos", (req, res) => {
 
-    const sql = `
+    db.all(
+        `
         SELECT
             id,
             nome,
@@ -243,20 +234,13 @@ app.get("/api/produtos", (req, res) => {
             ultima_atualizacao
         FROM produtos
         ORDER BY id DESC
-    `;
+        `,
 
-    db.all(
-        sql,
         [],
 
         (erro, produtos) => {
 
             if (erro) {
-
-                console.error(
-                    "Erro ao listar produtos:",
-                    erro
-                );
 
                 return res.status(500).json({
                     mensagem:
@@ -267,8 +251,7 @@ app.get("/api/produtos", (req, res) => {
             return res.json({
                 quantidade:
                     produtos.length,
-                produtos:
-                    produtos
+                produtos
             });
         }
     );
@@ -276,7 +259,7 @@ app.get("/api/produtos", (req, res) => {
 
 
 // ======================================================
-// EDITAR PRODUTO - API06
+// EDIÇÃO - API06
 // ======================================================
 
 app.put("/api/produtos/:id", (req, res) => {
@@ -325,7 +308,7 @@ app.put("/api/produtos/:id", (req, res) => {
 
         return res.status(400).json({
             mensagem:
-                "A quantidade deve ser maior ou igual a zero."
+                "Quantidade inválida."
         });
     }
 
@@ -335,7 +318,6 @@ app.put("/api/produtos/:id", (req, res) => {
         FROM produtos
         WHERE id = ?
         `,
-
         [id],
 
         (erro, produto) => {
@@ -356,25 +338,26 @@ app.put("/api/produtos/:id", (req, res) => {
                 });
             }
 
-            const sql = `
+            db.run(
+                `
                 UPDATE produtos
                 SET
                     nome = ?,
                     descricao = ?,
                     unidade = ?,
                     quantidade = ?,
-                    ultima_atualizacao = CURRENT_TIMESTAMP
+                    ultima_atualizacao =
+                        CURRENT_TIMESTAMP
                 WHERE id = ?
-            `;
-
-            db.run(
-                sql,
+                `,
 
                 [
                     nome.trim(),
+
                     descricao
                         ? descricao.trim()
                         : "",
+
                     unidade.trim(),
                     quantidadeNumerica,
                     id
@@ -390,131 +373,9 @@ app.put("/api/produtos/:id", (req, res) => {
                         });
                     }
 
-                    db.get(
-                        `
-                        SELECT *
-                        FROM produtos
-                        WHERE id = ?
-                        `,
-
-                        [id],
-
-                        (
-                            erroConsulta,
-                            produtoAtualizado
-                        ) => {
-
-                            if (erroConsulta) {
-
-                                return res.status(500).json({
-                                    mensagem:
-                                        "Erro ao consultar produto atualizado."
-                                });
-                            }
-
-                            return res.json({
-
-                                mensagem:
-                                    "Produto atualizado com sucesso!",
-
-                                produto:
-                                    produtoAtualizado
-                            });
-                        }
-                    );
-                }
-            );
-        }
-    );
-});
-
-
-// ======================================================
-// EXCLUIR PRODUTO - API07
-// ======================================================
-
-app.delete("/api/produtos/:id", (req, res) => {
-
-    const id =
-        Number(req.params.id);
-
-    if (
-        Number.isNaN(id) ||
-        id <= 0
-    ) {
-
-        return res.status(400).json({
-            mensagem:
-                "ID do produto inválido."
-        });
-    }
-
-    // Verifica primeiro se o produto existe
-    db.get(
-        `
-        SELECT *
-        FROM produtos
-        WHERE id = ?
-        `,
-
-        [id],
-
-        (erro, produto) => {
-
-            if (erro) {
-
-                console.error(
-                    "Erro ao buscar produto:",
-                    erro
-                );
-
-                return res.status(500).json({
-                    mensagem:
-                        "Erro ao buscar produto."
-                });
-            }
-
-            if (!produto) {
-
-                return res.status(404).json({
-                    mensagem:
-                        "Produto não encontrado."
-                });
-            }
-
-            // Exclui o produto
-            db.run(
-                `
-                DELETE FROM produtos
-                WHERE id = ?
-                `,
-
-                [id],
-
-                function (erroExclusao) {
-
-                    if (erroExclusao) {
-
-                        console.error(
-                            "Erro ao excluir produto:",
-                            erroExclusao
-                        );
-
-                        return res.status(500).json({
-                            mensagem:
-                                "Erro ao excluir produto."
-                        });
-                    }
-
                     return res.json({
-
                         mensagem:
-                            "Produto excluído com sucesso!",
-
-                        produto: {
-                            id: produto.id,
-                            nome: produto.nome
-                        }
+                            "Produto atualizado com sucesso!"
                     });
                 }
             );
@@ -524,13 +385,354 @@ app.delete("/api/produtos/:id", (req, res) => {
 
 
 // ======================================================
-// INICIA O SERVIDOR
+// EXCLUSÃO - API07
+// ======================================================
+
+app.delete(
+    "/api/produtos/:id",
+    (req, res) => {
+
+        const id =
+            Number(req.params.id);
+
+        if (
+            Number.isNaN(id) ||
+            id <= 0
+        ) {
+
+            return res.status(400).json({
+                mensagem:
+                    "ID do produto inválido."
+            });
+        }
+
+        db.get(
+            `
+            SELECT *
+            FROM produtos
+            WHERE id = ?
+            `,
+            [id],
+
+            (erro, produto) => {
+
+                if (erro) {
+
+                    return res.status(500).json({
+                        mensagem:
+                            "Erro ao buscar produto."
+                    });
+                }
+
+                if (!produto) {
+
+                    return res.status(404).json({
+                        mensagem:
+                            "Produto não encontrado."
+                    });
+                }
+
+                db.run(
+                    `
+                    DELETE FROM produtos
+                    WHERE id = ?
+                    `,
+                    [id],
+
+                    function (erroExclusao) {
+
+                        if (erroExclusao) {
+
+                            return res.status(500).json({
+                                mensagem:
+                                    "Erro ao excluir produto."
+                            });
+                        }
+
+                        return res.json({
+                            mensagem:
+                                "Produto excluído com sucesso!"
+                        });
+                    }
+                );
+            }
+        );
+    }
+);
+
+
+// ======================================================
+// MOVIMENTAÇÃO DE ESTOQUE - API08
+// ======================================================
+
+function movimentarEstoque(tipo) {
+
+    return function (req, res) {
+
+        const id =
+            Number(req.params.id);
+
+        const quantidade =
+            Number(req.body.quantidade);
+
+
+        if (
+            Number.isNaN(id) ||
+            id <= 0
+        ) {
+
+            return res.status(400).json({
+                mensagem:
+                    "ID do produto inválido."
+            });
+        }
+
+
+        if (
+            Number.isNaN(quantidade) ||
+            quantidade <= 0
+        ) {
+
+            return res.status(400).json({
+                mensagem:
+                    "Informe uma quantidade maior que zero."
+            });
+        }
+
+
+        db.get(
+            `
+            SELECT *
+            FROM produtos
+            WHERE id = ?
+            `,
+            [id],
+
+            (erro, produto) => {
+
+                if (erro) {
+
+                    return res.status(500).json({
+                        mensagem:
+                            "Erro ao buscar produto."
+                    });
+                }
+
+
+                if (!produto) {
+
+                    return res.status(404).json({
+                        mensagem:
+                            "Produto não encontrado."
+                    });
+                }
+
+
+                const estoqueAtual =
+                    Number(
+                        produto.quantidade
+                    );
+
+
+                if (
+                    tipo === "saida" &&
+                    quantidade > estoqueAtual
+                ) {
+
+                    return res.status(400).json({
+                        mensagem:
+                            "A quantidade de saída é maior que o estoque disponível."
+                    });
+                }
+
+
+                let novoEstoque;
+
+
+                if (tipo === "entrada") {
+
+                    novoEstoque =
+                        estoqueAtual +
+                        quantidade;
+
+                } else {
+
+                    novoEstoque =
+                        estoqueAtual -
+                        quantidade;
+                }
+
+
+                db.run(
+                    `
+                    UPDATE produtos
+                    SET
+                        quantidade = ?,
+                        ultima_atualizacao =
+                            CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    `,
+
+                    [
+                        novoEstoque,
+                        id
+                    ],
+
+                    function (erroAtualizacao) {
+
+                        if (erroAtualizacao) {
+
+                            return res.status(500).json({
+                                mensagem:
+                                    "Erro ao atualizar estoque."
+                            });
+                        }
+
+
+                        db.run(
+                            `
+                            INSERT INTO movimentacoes
+                            (
+                                produto_id,
+                                tipo,
+                                quantidade
+                            )
+                            VALUES (?, ?, ?)
+                            `,
+
+                            [
+                                id,
+                                tipo,
+                                quantidade
+                            ],
+
+                            function (erroMovimentacao) {
+
+                                if (erroMovimentacao) {
+
+                                    return res.status(500).json({
+                                        mensagem:
+                                            "Erro ao registrar movimentação."
+                                    });
+                                }
+
+
+                                const descricaoTipo =
+                                    tipo === "entrada"
+                                        ? "Entrada"
+                                        : "Saída";
+
+
+                                return res.json({
+
+                                    mensagem:
+                                        `${descricaoTipo} registrada com sucesso!`,
+
+                                    produto: {
+
+                                        id:
+                                            produto.id,
+
+                                        nome:
+                                            produto.nome,
+
+                                        quantidade:
+                                            novoEstoque
+                                    },
+
+                                    movimentacao: {
+
+                                        id:
+                                            this.lastID,
+
+                                        tipo:
+                                            tipo,
+
+                                        quantidade:
+                                            quantidade
+                                    }
+                                });
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    };
+}
+
+
+// Entrada
+app.post(
+    "/api/produtos/:id/entrada",
+    movimentarEstoque("entrada")
+);
+
+
+// Saída
+app.post(
+    "/api/produtos/:id/saida",
+    movimentarEstoque("saida")
+);
+
+
+// ======================================================
+// CONSULTAR MOVIMENTAÇÕES
+// ======================================================
+
+app.get(
+    "/api/movimentacoes",
+    (req, res) => {
+
+        db.all(
+            `
+            SELECT
+                movimentacoes.id,
+                produtos.nome AS produto,
+                movimentacoes.tipo,
+                movimentacoes.quantidade,
+                movimentacoes.data_movimentacao
+            FROM movimentacoes
+
+            INNER JOIN produtos
+                ON produtos.id =
+                   movimentacoes.produto_id
+
+            ORDER BY
+                movimentacoes.id DESC
+            `,
+
+            [],
+
+            (erro, movimentacoes) => {
+
+                if (erro) {
+
+                    return res.status(500).json({
+                        mensagem:
+                            "Erro ao consultar movimentações."
+                    });
+                }
+
+                return res.json({
+                    quantidade:
+                        movimentacoes.length,
+
+                    movimentacoes
+                });
+            }
+        );
+    }
+);
+
+
+// ======================================================
+// SERVIDOR
 // ======================================================
 
 app.listen(
     PORT,
     "0.0.0.0",
-
     () => {
 
         console.log(

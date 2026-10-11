@@ -27,7 +27,6 @@ const btnCancelar =
 
 
 let produtos = [];
-
 let produtoEmEdicao = null;
 
 
@@ -71,21 +70,13 @@ function exibirProdutos() {
 
         linha.innerHTML = `
 
-            <td>
-                ${produto.nome || ""}
-            </td>
+            <td>${produto.nome || ""}</td>
 
-            <td>
-                ${produto.descricao || ""}
-            </td>
+            <td>${produto.descricao || ""}</td>
 
-            <td>
-                ${produto.unidade || ""}
-            </td>
+            <td>${produto.unidade || ""}</td>
 
-            <td>
-                ${produto.quantidade ?? 0}
-            </td>
+            <td>${produto.quantidade ?? 0}</td>
 
             <td>
 
@@ -93,9 +84,54 @@ function exibirProdutos() {
                     type="button"
                     class="btn-editar"
                     data-id="${produto.id}"
+                    style="
+                        background:#2563eb;
+                        color:white;
+                        border:none;
+                        padding:7px 10px;
+                        border-radius:5px;
+                        cursor:pointer;
+                    "
                 >
                     Editar
                 </button>
+
+
+                <button
+                    type="button"
+                    class="btn-entrada"
+                    data-id="${produto.id}"
+                    style="
+                        background:#16a34a;
+                        color:white;
+                        border:none;
+                        padding:7px 10px;
+                        border-radius:5px;
+                        margin-left:4px;
+                        cursor:pointer;
+                    "
+                >
+                    Entrada
+                </button>
+
+
+                <button
+                    type="button"
+                    class="btn-saida"
+                    data-id="${produto.id}"
+                    style="
+                        background:#f59e0b;
+                        color:white;
+                        border:none;
+                        padding:7px 10px;
+                        border-radius:5px;
+                        margin-left:4px;
+                        cursor:pointer;
+                    "
+                >
+                    Saída
+                </button>
+
 
                 <button
                     type="button"
@@ -105,9 +141,9 @@ function exibirProdutos() {
                         background:#dc3545;
                         color:white;
                         border:none;
-                        padding:7px 12px;
+                        padding:7px 10px;
                         border-radius:5px;
-                        margin-left:5px;
+                        margin-left:4px;
                         cursor:pointer;
                     "
                 >
@@ -158,10 +194,7 @@ async function carregarProdutos() {
 
     } catch (erro) {
 
-        console.error(
-            "Erro ao carregar produtos:",
-            erro
-        );
+        console.error(erro);
 
         mostrarMensagem(
             "Não foi possível conectar à API.",
@@ -191,27 +224,19 @@ function limparFormulario() {
 
 
 // ======================================================
-// INICIAR EDIÇÃO
+// EDITAR
 // ======================================================
 
 function iniciarEdicao(id) {
 
     const produto =
         produtos.find(
-            function (item) {
-
-                return Number(item.id) ===
-                    Number(id);
-            }
+            item =>
+                Number(item.id) ===
+                Number(id)
         );
 
     if (!produto) {
-
-        mostrarMensagem(
-            "Produto não encontrado.",
-            "erro"
-        );
-
         return;
     }
 
@@ -244,31 +269,21 @@ function iniciarEdicao(id) {
 
 
 // ======================================================
-// CANCELAR EDIÇÃO
+// MOVIMENTAÇÃO
 // ======================================================
 
-function cancelarEdicao() {
-
-    limparFormulario();
-
-    mensagemProduto.textContent = "";
-}
-
-
-// ======================================================
-// EXCLUIR PRODUTO
-// ======================================================
-
-async function excluirProduto(id) {
+async function movimentarProduto(
+    id,
+    tipo
+) {
 
     const produto =
         produtos.find(
-            function (item) {
-
-                return Number(item.id) ===
-                    Number(id);
-            }
+            item =>
+                Number(item.id) ===
+                Number(id)
         );
+
 
     if (!produto) {
 
@@ -280,14 +295,128 @@ async function excluirProduto(id) {
         return;
     }
 
+
+    const acao =
+        tipo === "entrada"
+            ? "entrada"
+            : "saída";
+
+
+    const valor =
+        window.prompt(
+            `Informe a quantidade de ${acao} para "${produto.nome}":`
+        );
+
+
+    if (valor === null) {
+        return;
+    }
+
+
+    const quantidade =
+        Number(valor);
+
+
+    if (
+        Number.isNaN(quantidade) ||
+        quantidade <= 0
+    ) {
+
+        mostrarMensagem(
+            "Informe uma quantidade válida maior que zero.",
+            "erro"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `/api/produtos/${id}/${tipo}`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            quantidade
+                        })
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (!resposta.ok) {
+
+            mostrarMensagem(
+                dados.mensagem ||
+                "Erro ao movimentar estoque.",
+                "erro"
+            );
+
+            return;
+        }
+
+
+        mostrarMensagem(
+            dados.mensagem
+        );
+
+
+        await carregarProdutos();
+
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        mostrarMensagem(
+            "Não foi possível conectar à API.",
+            "erro"
+        );
+    }
+}
+
+
+// ======================================================
+// EXCLUIR
+// ======================================================
+
+async function excluirProduto(id) {
+
+    const produto =
+        produtos.find(
+            item =>
+                Number(item.id) ===
+                Number(id)
+        );
+
+
+    if (!produto) {
+        return;
+    }
+
+
     const confirmar =
         window.confirm(
             `Deseja realmente excluir "${produto.nome}"?`
         );
 
+
     if (!confirmar) {
         return;
     }
+
 
     try {
 
@@ -299,8 +428,10 @@ async function excluirProduto(id) {
                 }
             );
 
+
         const dados =
             await resposta.json();
+
 
         if (!resposta.ok) {
 
@@ -313,27 +444,16 @@ async function excluirProduto(id) {
             return;
         }
 
-        if (
-            Number(produtoEmEdicao) ===
-            Number(id)
-        ) {
-
-            limparFormulario();
-        }
 
         mostrarMensagem(
-            dados.mensagem ||
-            "Produto excluído com sucesso!"
+            dados.mensagem
         );
+
 
         await carregarProdutos();
 
-    } catch (erro) {
 
-        console.error(
-            "Erro ao excluir produto:",
-            erro
-        );
+    } catch (erro) {
 
         mostrarMensagem(
             "Não foi possível conectar à API.",
@@ -344,7 +464,7 @@ async function excluirProduto(id) {
 
 
 // ======================================================
-// CADASTRAR / EDITAR
+// CADASTRO E EDIÇÃO
 // ======================================================
 
 produtoForm.addEventListener(
@@ -353,6 +473,7 @@ produtoForm.addEventListener(
     async function (event) {
 
         event.preventDefault();
+
 
         const nome =
             campoNome.value.trim();
@@ -367,6 +488,7 @@ produtoForm.addEventListener(
             Number(
                 campoQuantidade.value
             );
+
 
         if (
             !nome ||
@@ -384,22 +506,18 @@ produtoForm.addEventListener(
             return;
         }
 
-        btnSalvar.disabled = true;
 
         try {
 
-            // ==================================================
-            // EDITAR
-            // ==================================================
+            let resposta;
 
+
+            // EDITAR
             if (
                 produtoEmEdicao !== null
             ) {
 
-                btnSalvar.textContent =
-                    "Atualizando...";
-
-                const resposta =
+                resposta =
                     await fetch(
                         `/api/produtos/${produtoEmEdicao}`,
                         {
@@ -420,120 +538,72 @@ produtoForm.addEventListener(
                         }
                     );
 
-                const dados =
-                    await resposta.json();
+            } else {
 
-                if (!resposta.ok) {
+                // CADASTRAR
+                resposta =
+                    await fetch(
+                        "/api/produtos",
+                        {
+                            method: "POST",
 
-                    mostrarMensagem(
-                        dados.mensagem ||
-                        "Erro ao atualizar produto.",
-                        "erro"
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    nome,
+                                    descricao,
+                                    unidade,
+                                    quantidade
+                                })
+                        }
                     );
-
-                    return;
-                }
-
-                limparFormulario();
-
-                mostrarMensagem(
-                    dados.mensagem ||
-                    "Produto atualizado com sucesso!"
-                );
-
-                await carregarProdutos();
-
-                return;
             }
 
 
-            // ==================================================
-            // CADASTRAR
-            // ==================================================
-
-            btnSalvar.textContent =
-                "Salvando...";
-
-            const resposta =
-                await fetch(
-                    "/api/produtos",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-                                nome,
-                                descricao,
-                                unidade,
-                                quantidade
-                            })
-                    }
-                );
-
             const dados =
                 await resposta.json();
+
 
             if (!resposta.ok) {
 
                 mostrarMensagem(
                     dados.mensagem ||
-                    "Erro ao cadastrar produto.",
+                    "Erro na operação.",
                     "erro"
                 );
 
                 return;
             }
 
+
             limparFormulario();
 
             mostrarMensagem(
-                dados.mensagem ||
-                "Produto cadastrado com sucesso!"
+                dados.mensagem
             );
 
             await carregarProdutos();
 
+
         } catch (erro) {
 
-            console.error(
-                "Erro na operação:",
-                erro
-            );
+            console.error(erro);
 
             mostrarMensagem(
                 "Não foi possível conectar à API.",
                 "erro"
             );
-
-        } finally {
-
-            btnSalvar.disabled =
-                false;
-
-            if (
-                produtoEmEdicao === null
-            ) {
-
-                btnSalvar.textContent =
-                    "+ Salvar Produto";
-
-            } else {
-
-                btnSalvar.textContent =
-                    "Salvar Alterações";
-            }
         }
     }
 );
 
 
 // ======================================================
-// BOTÕES DA TABELA
+// BOTÕES
 // ======================================================
 
 listaProdutos.addEventListener(
@@ -546,23 +616,47 @@ listaProdutos.addEventListener(
                 event.target.dataset.id
             );
 
+
         if (
-            event.target
-                .classList
-                .contains(
-                    "btn-editar"
-                )
+            event.target.classList.contains(
+                "btn-editar"
+            )
         ) {
 
             iniciarEdicao(id);
         }
 
+
         if (
-            event.target
-                .classList
-                .contains(
-                    "btn-excluir"
-                )
+            event.target.classList.contains(
+                "btn-entrada"
+            )
+        ) {
+
+            movimentarProduto(
+                id,
+                "entrada"
+            );
+        }
+
+
+        if (
+            event.target.classList.contains(
+                "btn-saida"
+            )
+        ) {
+
+            movimentarProduto(
+                id,
+                "saida"
+            );
+        }
+
+
+        if (
+            event.target.classList.contains(
+                "btn-excluir"
+            )
         ) {
 
             excluirProduto(id);
@@ -577,12 +671,12 @@ listaProdutos.addEventListener(
 
 btnCancelar.addEventListener(
     "click",
-    cancelarEdicao
+    limparFormulario
 );
 
 
 // ======================================================
-// CARREGAMENTO INICIAL
+// INICIALIZAÇÃO
 // ======================================================
 
 carregarProdutos();
