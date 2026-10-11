@@ -1,86 +1,198 @@
-const produtoForm = document.getElementById("produtoForm");
-const listaProdutos = document.getElementById("listaProdutos");
-const mensagemProduto = document.getElementById("mensagemProduto");
+const produtoForm =
+    document.getElementById(
+        "produtoForm"
+    );
 
-const campoNome = document.getElementById("nome");
-const campoDescricao = document.getElementById("descricao");
-const campoUnidade = document.getElementById("unidade");
-const campoQuantidade = document.getElementById("quantidade");
+const listaProdutos =
+    document.getElementById(
+        "listaProdutos"
+    );
 
-const btnSalvar = document.getElementById("btnSalvar");
-const btnCancelar = document.getElementById("btnCancelar");
+const mensagemProduto =
+    document.getElementById(
+        "mensagemProduto"
+    );
 
-// Mantém os produtos antigos funcionando durante a migração para a API
-let produtos = JSON.parse(
-    localStorage.getItem("produtos")
-) || [];
+const campoNome =
+    document.getElementById(
+        "nome"
+    );
+
+const campoDescricao =
+    document.getElementById(
+        "descricao"
+    );
+
+const campoUnidade =
+    document.getElementById(
+        "unidade"
+    );
+
+const campoQuantidade =
+    document.getElementById(
+        "quantidade"
+    );
+
+const btnSalvar =
+    document.getElementById(
+        "btnSalvar"
+    );
+
+const btnCancelar =
+    document.getElementById(
+        "btnCancelar"
+    );
+
+
+let produtos = [];
 
 let produtoEmEdicao = null;
 
 
 // ======================================================
-// SALVAR PRODUTOS NO LOCALSTORAGE
+// MENSAGEM
 // ======================================================
 
-function salvarProdutosLocalmente() {
-    localStorage.setItem(
-        "produtos",
-        JSON.stringify(produtos)
+function mostrarMensagem(
+    mensagem,
+    tipo = "sucesso"
+) {
+
+    mensagemProduto.textContent =
+        mensagem;
+
+    if (tipo === "erro") {
+
+        mensagemProduto.style.color =
+            "#c62828";
+
+    } else {
+
+        mensagemProduto.style.color =
+            "#15803d";
+    }
+
+
+    setTimeout(
+        () => {
+
+            mensagemProduto.textContent =
+                "";
+
+        },
+        3000
     );
 }
 
 
 // ======================================================
-// MOSTRAR MENSAGEM
-// ======================================================
-
-function mostrarMensagem(mensagem, tipo = "sucesso") {
-
-    mensagemProduto.textContent = mensagem;
-
-    if (tipo === "erro") {
-        mensagemProduto.style.color = "#c62828";
-    } else {
-        mensagemProduto.style.color = "#15803d";
-    }
-
-    setTimeout(() => {
-        mensagemProduto.textContent = "";
-    }, 3000);
-}
-
-
-// ======================================================
-// EXIBIR PRODUTOS NA TABELA
+// EXIBIR PRODUTOS
 // ======================================================
 
 function exibirProdutos() {
 
     listaProdutos.innerHTML = "";
 
-    produtos.forEach((produto, index) => {
 
-        const linha = document.createElement("tr");
+    produtos.forEach(
+        function (produto) {
 
-        linha.innerHTML = `
-            <td>${produto.nome || ""}</td>
-            <td>${produto.descricao || ""}</td>
-            <td>${produto.unidade || ""}</td>
-            <td>${produto.quantidade ?? 0}</td>
+            const linha =
+                document.createElement(
+                    "tr"
+                );
 
-            <td>
-                <button
-                    type="button"
-                    class="btn-editar"
-                    data-index="${index}"
-                >
-                    Editar
-                </button>
-            </td>
-        `;
 
-        listaProdutos.appendChild(linha);
-    });
+            linha.innerHTML = `
+
+                <td>
+                    ${produto.nome || ""}
+                </td>
+
+                <td>
+                    ${produto.descricao || ""}
+                </td>
+
+                <td>
+                    ${produto.unidade || ""}
+                </td>
+
+                <td>
+                    ${produto.quantidade ?? 0}
+                </td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        class="btn-editar"
+                        data-id="${produto.id}"
+                    >
+                        Editar
+                    </button>
+
+                </td>
+            `;
+
+
+            listaProdutos.appendChild(
+                linha
+            );
+        }
+    );
+}
+
+
+// ======================================================
+// CARREGAR PRODUTOS DA API
+// ======================================================
+
+async function carregarProdutos() {
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/api/produtos"
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (!resposta.ok) {
+
+            mostrarMensagem(
+                dados.mensagem ||
+                "Erro ao carregar produtos.",
+                "erro"
+            );
+
+            return;
+        }
+
+
+        produtos =
+            dados.produtos || [];
+
+
+        exibirProdutos();
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao carregar produtos:",
+            erro
+        );
+
+
+        mostrarMensagem(
+            "Não foi possível conectar à API.",
+            "erro"
+        );
+    }
 }
 
 
@@ -96,7 +208,8 @@ function limparFormulario() {
 
     produtoEmEdicao = null;
 
-    btnSalvar.textContent = "+ Salvar Produto";
+    btnSalvar.textContent =
+        "+ Salvar Produto";
 
     btnCancelar.hidden = true;
 }
@@ -106,24 +219,55 @@ function limparFormulario() {
 // INICIAR EDIÇÃO
 // ======================================================
 
-function iniciarEdicao(index) {
+function iniciarEdicao(id) {
 
-    const produto = produtos[index];
+    const produto =
+        produtos.find(
+            function (item) {
+
+                return Number(item.id) ===
+                    Number(id);
+            }
+        );
+
 
     if (!produto) {
+
+        mostrarMensagem(
+            "Produto não encontrado.",
+            "erro"
+        );
+
         return;
     }
 
-    produtoEmEdicao = index;
 
-    campoNome.value = produto.nome || "";
-    campoDescricao.value = produto.descricao || "";
-    campoUnidade.value = produto.unidade || "";
-    campoQuantidade.value = produto.quantidade ?? 0;
+    produtoEmEdicao =
+        produto.id;
 
-    btnSalvar.textContent = "Salvar Alterações";
+
+    campoNome.value =
+        produto.nome || "";
+
+
+    campoDescricao.value =
+        produto.descricao || "";
+
+
+    campoUnidade.value =
+        produto.unidade || "";
+
+
+    campoQuantidade.value =
+        produto.quantidade ?? 0;
+
+
+    btnSalvar.textContent =
+        "Salvar Alterações";
+
 
     btnCancelar.hidden = false;
+
 
     window.scrollTo({
         top: 0,
@@ -145,23 +289,35 @@ function cancelarEdicao() {
 
 
 // ======================================================
-// CADASTRO / EDIÇÃO
+// SUBMIT
 // ======================================================
 
 produtoForm.addEventListener(
     "submit",
+
     async function (event) {
 
         event.preventDefault();
 
-        const nome = campoNome.value.trim();
-        const descricao = campoDescricao.value.trim();
-        const unidade = campoUnidade.value;
-        const quantidade = Number(
-            campoQuantidade.value
-        );
 
-        // Validação básica
+        const nome =
+            campoNome.value.trim();
+
+
+        const descricao =
+            campoDescricao.value.trim();
+
+
+        const unidade =
+            campoUnidade.value;
+
+
+        const quantidade =
+            Number(
+                campoQuantidade.value
+            );
+
+
         if (
             !nome ||
             !descricao ||
@@ -179,64 +335,112 @@ produtoForm.addEventListener(
         }
 
 
-        // ==================================================
-        // EDIÇÃO LOCAL
-        // A integração da edição com a API será feita no API06
-        // ==================================================
+        btnSalvar.disabled = true;
 
-        if (produtoEmEdicao !== null) {
-
-            produtos[produtoEmEdicao] = {
-                ...produtos[produtoEmEdicao],
-                nome,
-                descricao,
-                unidade,
-                quantidade
-            };
-
-            salvarProdutosLocalmente();
-
-            exibirProdutos();
-
-            limparFormulario();
-
-            mostrarMensagem(
-                "Produto atualizado com sucesso!"
-            );
-
-            return;
-        }
-
-
-        // ==================================================
-        // NOVO PRODUTO - SALVA PELA API
-        // ==================================================
 
         try {
 
-            btnSalvar.disabled = true;
-            btnSalvar.textContent = "Salvando...";
+            // =============================================
+            // EDITAR PRODUTO
+            // =============================================
 
-            const resposta = await fetch(
-                "/api/produtos",
-                {
-                    method: "POST",
+            if (
+                produtoEmEdicao !== null
+            ) {
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                btnSalvar.textContent =
+                    "Atualizando...";
 
-                    body: JSON.stringify({
-                        nome,
-                        descricao,
-                        unidade,
-                        quantidade
-                    })
+
+                const resposta =
+                    await fetch(
+                        `/api/produtos/${produtoEmEdicao}`,
+
+                        {
+                            method: "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    nome,
+                                    descricao,
+                                    unidade,
+                                    quantidade
+                                })
+                        }
+                    );
+
+
+                const dados =
+                    await resposta.json();
+
+
+                if (!resposta.ok) {
+
+                    mostrarMensagem(
+                        dados.mensagem ||
+                        "Erro ao atualizar produto.",
+                        "erro"
+                    );
+
+                    return;
                 }
-            );
 
-            const dados = await resposta.json();
+
+                mostrarMensagem(
+                    dados.mensagem ||
+                    "Produto atualizado com sucesso!"
+                );
+
+
+                limparFormulario();
+
+
+                await carregarProdutos();
+
+
+                return;
+            }
+
+
+            // =============================================
+            // CADASTRAR NOVO PRODUTO
+            // =============================================
+
+            btnSalvar.textContent =
+                "Salvando...";
+
+
+            const resposta =
+                await fetch(
+                    "/api/produtos",
+
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                nome,
+                                descricao,
+                                unidade,
+                                quantidade
+                            })
+                    }
+                );
+
+
+            const dados =
+                await resposta.json();
+
 
             if (!resposta.ok) {
 
@@ -250,53 +454,49 @@ produtoForm.addEventListener(
             }
 
 
-            // Produto retornado pelo banco/API
-            const novoProduto = {
-                id: dados.produto.id,
-                nome: dados.produto.nome,
-                descricao:
-                    dados.produto.descricao,
-                unidade:
-                    dados.produto.unidade,
-                quantidade:
-                    dados.produto.quantidade
-            };
-
-
-            // Mantém a interface atual funcionando
-            // até a implementação do API05
-            produtos.push(novoProduto);
-
-            salvarProdutosLocalmente();
-
-            exibirProdutos();
-
-            limparFormulario();
-
             mostrarMensagem(
                 dados.mensagem ||
                 "Produto cadastrado com sucesso!"
             );
 
+
+            limparFormulario();
+
+
+            await carregarProdutos();
+
+
         } catch (erro) {
 
             console.error(
-                "Erro ao cadastrar produto:",
+                "Erro na operação:",
                 erro
             );
+
 
             mostrarMensagem(
                 "Não foi possível conectar à API.",
                 "erro"
             );
 
+
         } finally {
 
-            btnSalvar.disabled = false;
+            btnSalvar.disabled =
+                false;
 
-            if (produtoEmEdicao === null) {
+
+            if (
+                produtoEmEdicao === null
+            ) {
+
                 btnSalvar.textContent =
                     "+ Salvar Produto";
+
+            } else {
+
+                btnSalvar.textContent =
+                    "Salvar Alterações";
             }
         }
     }
@@ -304,24 +504,29 @@ produtoForm.addEventListener(
 
 
 // ======================================================
-// CLIQUE NO BOTÃO EDITAR
+// BOTÃO EDITAR
 // ======================================================
 
 listaProdutos.addEventListener(
     "click",
+
     function (event) {
 
         if (
-            event.target.classList.contains(
-                "btn-editar"
-            )
+            event.target
+                .classList
+                .contains(
+                    "btn-editar"
+                )
         ) {
 
-            const index = Number(
-                event.target.dataset.index
-            );
+            const id =
+                Number(
+                    event.target.dataset.id
+                );
 
-            iniciarEdicao(index);
+
+            iniciarEdicao(id);
         }
     }
 );
@@ -341,4 +546,4 @@ btnCancelar.addEventListener(
 // CARREGAMENTO INICIAL
 // ======================================================
 
-exibirProdutos();
+carregarProdutos();
