@@ -46,8 +46,7 @@ app.get("/", (req, res) => {
 app.get("/api/status", (req, res) => {
 
     res.json({
-        mensagem:
-            "API StockLanche funcionando!"
+        mensagem: "API StockLanche funcionando!"
     });
 });
 
@@ -58,19 +57,14 @@ app.get("/api/status", (req, res) => {
 
 app.post("/api/login", (req, res) => {
 
-    const {
-        email,
-        senha
-    } = req.body;
+    const { email, senha } = req.body;
 
     if (!email || !senha) {
 
-        return res
-            .status(400)
-            .json({
-                mensagem:
-                    "E-mail e senha são obrigatórios."
-            });
+        return res.status(400).json({
+            mensagem:
+                "E-mail e senha são obrigatórios."
+        });
     }
 
     db.get(
@@ -86,22 +80,18 @@ app.post("/api/login", (req, res) => {
                     erro
                 );
 
-                return res
-                    .status(500)
-                    .json({
-                        mensagem:
-                            "Erro interno do servidor."
-                    });
+                return res.status(500).json({
+                    mensagem:
+                        "Erro interno do servidor."
+                });
             }
 
             if (!usuario) {
 
-                return res
-                    .status(401)
-                    .json({
-                        mensagem:
-                            "E-mail ou senha inválidos."
-                    });
+                return res.status(401).json({
+                    mensagem:
+                        "E-mail ou senha inválidos."
+                });
             }
 
             const senhaCorreta =
@@ -112,12 +102,10 @@ app.post("/api/login", (req, res) => {
 
             if (!senhaCorreta) {
 
-                return res
-                    .status(401)
-                    .json({
-                        mensagem:
-                            "E-mail ou senha inválidos."
-                    });
+                return res.status(401).json({
+                    mensagem:
+                        "E-mail ou senha inválidos."
+                });
             }
 
             return res.json({
@@ -126,17 +114,10 @@ app.post("/api/login", (req, res) => {
                     "Login realizado com sucesso!",
 
                 usuario: {
-
                     id: usuario.id,
-
-                    nome:
-                        usuario.nome,
-
-                    email:
-                        usuario.email,
-
-                    perfil:
-                        usuario.perfil
+                    nome: usuario.nome,
+                    email: usuario.email,
+                    perfil: usuario.perfil
                 }
             });
         }
@@ -145,8 +126,7 @@ app.post("/api/login", (req, res) => {
 
 
 // ======================================================
-// CADASTRAR PRODUTO
-// API04
+// CADASTRAR PRODUTO - API04
 // ======================================================
 
 app.post("/api/produtos", (req, res) => {
@@ -165,30 +145,24 @@ app.post("/api/produtos", (req, res) => {
         quantidade === null
     ) {
 
-        return res
-            .status(400)
-            .json({
-                mensagem:
-                    "Nome, unidade e quantidade são obrigatórios."
-            });
+        return res.status(400).json({
+            mensagem:
+                "Nome, unidade e quantidade são obrigatórios."
+        });
     }
 
     const quantidadeNumerica =
         Number(quantidade);
 
     if (
-        Number.isNaN(
-            quantidadeNumerica
-        ) ||
+        Number.isNaN(quantidadeNumerica) ||
         quantidadeNumerica < 0
     ) {
 
-        return res
-            .status(400)
-            .json({
-                mensagem:
-                    "A quantidade deve ser maior ou igual a zero."
-            });
+        return res.status(400).json({
+            mensagem:
+                "A quantidade deve ser maior ou igual a zero."
+        });
     }
 
     const sql = `
@@ -208,13 +182,10 @@ app.post("/api/produtos", (req, res) => {
 
         [
             nome.trim(),
-
             descricao
                 ? descricao.trim()
                 : "",
-
             unidade.trim(),
-
             quantidadeNumerica
         ],
 
@@ -227,49 +198,36 @@ app.post("/api/produtos", (req, res) => {
                     erro
                 );
 
-                return res
-                    .status(500)
-                    .json({
-                        mensagem:
-                            "Erro ao cadastrar produto."
-                    });
+                return res.status(500).json({
+                    mensagem:
+                        "Erro ao cadastrar produto."
+                });
             }
 
-            return res
-                .status(201)
-                .json({
+            return res.status(201).json({
 
-                    mensagem:
-                        "Produto cadastrado com sucesso!",
+                mensagem:
+                    "Produto cadastrado com sucesso!",
 
-                    produto: {
-
-                        id:
-                            this.lastID,
-
-                        nome:
-                            nome.trim(),
-
-                        descricao:
-                            descricao
-                                ? descricao.trim()
-                                : "",
-
-                        unidade:
-                            unidade.trim(),
-
-                        quantidade:
-                            quantidadeNumerica
-                    }
-                });
+                produto: {
+                    id: this.lastID,
+                    nome: nome.trim(),
+                    descricao:
+                        descricao
+                            ? descricao.trim()
+                            : "",
+                    unidade: unidade.trim(),
+                    quantidade:
+                        quantidadeNumerica
+                }
+            });
         }
     );
 });
 
 
 // ======================================================
-// LISTAR PRODUTOS
-// API05
+// LISTAR PRODUTOS - API05
 // ======================================================
 
 app.get("/api/produtos", (req, res) => {
@@ -300,19 +258,15 @@ app.get("/api/produtos", (req, res) => {
                     erro
                 );
 
-                return res
-                    .status(500)
-                    .json({
-                        mensagem:
-                            "Erro ao consultar produtos."
-                    });
+                return res.status(500).json({
+                    mensagem:
+                        "Erro ao consultar produtos."
+                });
             }
 
             return res.json({
-
                 quantidade:
                     produtos.length,
-
                 produtos:
                     produtos
             });
@@ -322,203 +276,251 @@ app.get("/api/produtos", (req, res) => {
 
 
 // ======================================================
-// EDITAR PRODUTO
-// API06
+// EDITAR PRODUTO - API06
 // ======================================================
 
-app.put(
-    "/api/produtos/:id",
+app.put("/api/produtos/:id", (req, res) => {
 
-    (req, res) => {
+    const id =
+        Number(req.params.id);
 
-        const id =
-            Number(req.params.id);
+    const {
+        nome,
+        descricao,
+        unidade,
+        quantidade
+    } = req.body;
 
-        const {
-            nome,
-            descricao,
-            unidade,
-            quantidade
-        } = req.body;
+    if (
+        Number.isNaN(id) ||
+        id <= 0
+    ) {
 
+        return res.status(400).json({
+            mensagem:
+                "ID do produto inválido."
+        });
+    }
 
-        if (
-            Number.isNaN(id) ||
-            id <= 0
-        ) {
+    if (
+        !nome ||
+        !unidade ||
+        quantidade === undefined ||
+        quantidade === null
+    ) {
 
-            return res
-                .status(400)
-                .json({
+        return res.status(400).json({
+            mensagem:
+                "Nome, unidade e quantidade são obrigatórios."
+        });
+    }
+
+    const quantidadeNumerica =
+        Number(quantidade);
+
+    if (
+        Number.isNaN(quantidadeNumerica) ||
+        quantidadeNumerica < 0
+    ) {
+
+        return res.status(400).json({
+            mensagem:
+                "A quantidade deve ser maior ou igual a zero."
+        });
+    }
+
+    db.get(
+        `
+        SELECT *
+        FROM produtos
+        WHERE id = ?
+        `,
+
+        [id],
+
+        (erro, produto) => {
+
+            if (erro) {
+
+                return res.status(500).json({
                     mensagem:
-                        "ID do produto inválido."
+                        "Erro ao buscar produto."
                 });
-        }
+            }
 
+            if (!produto) {
 
-        if (
-            !nome ||
-            !unidade ||
-            quantidade === undefined ||
-            quantidade === null
-        ) {
-
-            return res
-                .status(400)
-                .json({
+                return res.status(404).json({
                     mensagem:
-                        "Nome, unidade e quantidade são obrigatórios."
+                        "Produto não encontrado."
                 });
-        }
+            }
 
+            const sql = `
+                UPDATE produtos
+                SET
+                    nome = ?,
+                    descricao = ?,
+                    unidade = ?,
+                    quantidade = ?,
+                    ultima_atualizacao = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `;
 
-        const quantidadeNumerica =
-            Number(quantidade);
+            db.run(
+                sql,
 
+                [
+                    nome.trim(),
+                    descricao
+                        ? descricao.trim()
+                        : "",
+                    unidade.trim(),
+                    quantidadeNumerica,
+                    id
+                ],
 
-        if (
-            Number.isNaN(
-                quantidadeNumerica
-            ) ||
-            quantidadeNumerica < 0
-        ) {
+                function (erroAtualizacao) {
 
-            return res
-                .status(400)
-                .json({
-                    mensagem:
-                        "A quantidade deve ser maior ou igual a zero."
-                });
-        }
+                    if (erroAtualizacao) {
 
-
-        // Primeiro verifica se o produto existe
-        db.get(
-            `
-            SELECT *
-            FROM produtos
-            WHERE id = ?
-            `,
-
-            [id],
-
-            (erro, produto) => {
-
-                if (erro) {
-
-                    console.error(
-                        "Erro ao buscar produto:",
-                        erro
-                    );
-
-                    return res
-                        .status(500)
-                        .json({
+                        return res.status(500).json({
                             mensagem:
-                                "Erro ao buscar produto."
+                                "Erro ao atualizar produto."
                         });
-                }
+                    }
 
+                    db.get(
+                        `
+                        SELECT *
+                        FROM produtos
+                        WHERE id = ?
+                        `,
 
-                if (!produto) {
+                        [id],
 
-                    return res
-                        .status(404)
-                        .json({
-                            mensagem:
-                                "Produto não encontrado."
-                        });
-                }
+                        (
+                            erroConsulta,
+                            produtoAtualizado
+                        ) => {
 
+                            if (erroConsulta) {
 
-                const sql = `
-                    UPDATE produtos
-                    SET
-                        nome = ?,
-                        descricao = ?,
-                        unidade = ?,
-                        quantidade = ?,
-                        ultima_atualizacao = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                `;
-
-
-                db.run(
-                    sql,
-
-                    [
-                        nome.trim(),
-
-                        descricao
-                            ? descricao.trim()
-                            : "",
-
-                        unidade.trim(),
-
-                        quantidadeNumerica,
-
-                        id
-                    ],
-
-                    function (erroAtualizacao) {
-
-                        if (erroAtualizacao) {
-
-                            console.error(
-                                "Erro ao atualizar produto:",
-                                erroAtualizacao
-                            );
-
-                            return res
-                                .status(500)
-                                .json({
+                                return res.status(500).json({
                                     mensagem:
-                                        "Erro ao atualizar produto."
-                                });
-                        }
-
-
-                        db.get(
-                            `
-                            SELECT *
-                            FROM produtos
-                            WHERE id = ?
-                            `,
-
-                            [id],
-
-                            (
-                                erroConsulta,
-                                produtoAtualizado
-                            ) => {
-
-                                if (erroConsulta) {
-
-                                    return res
-                                        .status(500)
-                                        .json({
-                                            mensagem:
-                                                "Produto atualizado, mas ocorreu erro ao consultar os novos dados."
-                                        });
-                                }
-
-
-                                return res.json({
-
-                                    mensagem:
-                                        "Produto atualizado com sucesso!",
-
-                                    produto:
-                                        produtoAtualizado
+                                        "Erro ao consultar produto atualizado."
                                 });
                             }
-                        );
-                    }
-                );
-            }
-        );
+
+                            return res.json({
+
+                                mensagem:
+                                    "Produto atualizado com sucesso!",
+
+                                produto:
+                                    produtoAtualizado
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+
+// ======================================================
+// EXCLUIR PRODUTO - API07
+// ======================================================
+
+app.delete("/api/produtos/:id", (req, res) => {
+
+    const id =
+        Number(req.params.id);
+
+    if (
+        Number.isNaN(id) ||
+        id <= 0
+    ) {
+
+        return res.status(400).json({
+            mensagem:
+                "ID do produto inválido."
+        });
     }
-);
+
+    // Verifica primeiro se o produto existe
+    db.get(
+        `
+        SELECT *
+        FROM produtos
+        WHERE id = ?
+        `,
+
+        [id],
+
+        (erro, produto) => {
+
+            if (erro) {
+
+                console.error(
+                    "Erro ao buscar produto:",
+                    erro
+                );
+
+                return res.status(500).json({
+                    mensagem:
+                        "Erro ao buscar produto."
+                });
+            }
+
+            if (!produto) {
+
+                return res.status(404).json({
+                    mensagem:
+                        "Produto não encontrado."
+                });
+            }
+
+            // Exclui o produto
+            db.run(
+                `
+                DELETE FROM produtos
+                WHERE id = ?
+                `,
+
+                [id],
+
+                function (erroExclusao) {
+
+                    if (erroExclusao) {
+
+                        console.error(
+                            "Erro ao excluir produto:",
+                            erroExclusao
+                        );
+
+                        return res.status(500).json({
+                            mensagem:
+                                "Erro ao excluir produto."
+                        });
+                    }
+
+                    return res.json({
+
+                        mensagem:
+                            "Produto excluído com sucesso!",
+
+                        produto: {
+                            id: produto.id,
+                            nome: produto.nome
+                        }
+                    });
+                }
+            );
+        }
+    );
+});
 
 
 // ======================================================
