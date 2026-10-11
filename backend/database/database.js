@@ -1,5 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const bcrypt = require("bcryptjs");
 
 const caminhoBanco = path.join(__dirname, "stocklanche.db");
 
@@ -13,6 +14,7 @@ const db = new sqlite3.Database(caminhoBanco, (erro) => {
 
 db.serialize(() => {
 
+    // Tabela de usuários
     db.run(`
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,6 +25,7 @@ db.serialize(() => {
         )
     `);
 
+    // Tabela de produtos
     db.run(`
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,6 +37,23 @@ db.serialize(() => {
             ultima_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Usuário administrador inicial
+    const senhaCriptografada = bcrypt.hashSync("123456", 10);
+
+    db.run(
+        `
+        INSERT OR IGNORE INTO usuarios
+        (nome, email, senha, perfil)
+        VALUES (?, ?, ?, ?)
+        `,
+        [
+            "Administrador",
+            "admin@stocklanche.com",
+            senhaCriptografada,
+            "admin"
+        ]
+    );
 
     console.log("Tabelas verificadas/criadas com sucesso!");
 });
