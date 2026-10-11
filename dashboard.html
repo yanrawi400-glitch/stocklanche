@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>StockLanche - Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- MENU LATERAL -->
+    <aside class="sidebar">
+
+        <h2>📦 StockLanche</h2>
+
+        <nav>
+            <a
+                href="dashboard.html"
+                class="ativo"
+            >
+                Dashboard
+            </a>
+
+            <a href="produtos.html">
+                Produtos
+            </a>
+
+            <a href="consulta.html">
+                Consulta
+            </a>
+        </nav>
+
+        <a
+            href="index.html"
+            class="sair"
+            id="btnSair"
+        >
+            Sair
+        </a>
+
+    </aside>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="conteudo">
+
+        <h1>Dashboard</h1>
+
+        <p class="subtitulo">
+            Visão geral do estoque do StockLanche
+        </p>
+
+
+        <!-- CARDS -->
+        <section class="dashboard-cards">
+
+            <div class="card">
+
+                <h3>Produtos Cadastrados</h3>
+
+                <h2 id="totalProdutos">
+                    0
+                </h2>
+
+                <p>
+                    produtos registrados
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Quantidade em Estoque</h3>
+
+                <h2 id="totalEstoque">
+                    0
+                </h2>
+
+                <p>
+                    itens disponíveis
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>Estoque Baixo</h3>
+
+                <h2 id="estoqueBaixo">
+                    0
+                </h2>
+
+                <p>
+                    produtos precisam de atenção
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- INFORMAÇÕES -->
+        <section class="card">
+
+            <h2>Resumo do Sistema</h2>
+
+            <p>
+                Utilize o menu lateral para cadastrar,
+                editar e consultar os produtos disponíveis
+                no estoque.
+            </p>
+
+            <p id="usuarioLogado"></p>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    // ==================================================
+    // VERIFICA SE O USUÁRIO ESTÁ LOGADO
+    // ==================================================
+
+    const estaLogado =
+        sessionStorage.getItem("usuarioLogado");
+
+    if (estaLogado !== "true") {
+
+        window.location.href = "index.html";
+
+    }
+
+
+    // ==================================================
+    // MOSTRA O USUÁRIO LOGADO
+    // ==================================================
+
+    const usuarioSalvo =
+        sessionStorage.getItem("usuario");
+
+    if (usuarioSalvo) {
+
+        const usuario =
+            JSON.parse(usuarioSalvo);
+
+        document.getElementById(
+            "usuarioLogado"
+        ).textContent =
+            `Usuário conectado: ${usuario.nome}`;
+
+    }
+
+
+    // ==================================================
+    // CARREGA OS PRODUTOS
+    // TEMPORARIAMENTE DO LOCALSTORAGE
+    // ==================================================
+
+    const produtos =
+        JSON.parse(
+            localStorage.getItem("produtos")
+        ) || [];
+
+
+    // Quantidade de produtos diferentes
+    const totalProdutos =
+        produtos.length;
+
+
+    // Soma das quantidades
+    const totalEstoque =
+        produtos.reduce(
+            (total, produto) => {
+
+                return total +
+                    Number(
+                        produto.quantidade || 0
+                    );
+
+            },
+            0
+        );
+
+
+    // Considera estoque baixo até 5 unidades
+    const estoqueBaixo =
+        produtos.filter(
+            produto =>
+                Number(
+                    produto.quantidade
+                ) <= 5
+        ).length;
+
+
+    document.getElementById(
+        "totalProdutos"
+    ).textContent =
+        totalProdutos;
+
+
+    document.getElementById(
+        "totalEstoque"
+    ).textContent =
+        totalEstoque;
+
+
+    document.getElementById(
+        "estoqueBaixo"
+    ).textContent =
+        estoqueBaixo;
+
+
+    // ==================================================
+    // LOGOUT
+    // ==================================================
+
+    document.getElementById(
+        "btnSair"
+    ).addEventListener(
+        "click",
+        function () {
+
+            sessionStorage.removeItem(
+                "usuarioLogado"
+            );
+
+            sessionStorage.removeItem(
+                "usuario"
+            );
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

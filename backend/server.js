@@ -17,21 +17,27 @@ app.use(express.json());
 // Disponibiliza os arquivos do front-end
 app.use(express.static(path.join(__dirname, "..")));
 
-// Abre a tela de login na rota principal
+// Abre a tela de login
 app.get("/", (req, res) => {
     res.sendFile(
         path.join(__dirname, "..", "index.html")
     );
 });
 
-// Rota para testar a API
+// ======================================================
+// TESTE DA API
+// ======================================================
+
 app.get("/api/status", (req, res) => {
     res.json({
         mensagem: "API StockLanche funcionando!"
     });
 });
 
-// Rota de login
+// ======================================================
+// LOGIN
+// ======================================================
+
 app.post("/api/login", (req, res) => {
 
     const { email, senha } = req.body;
@@ -85,10 +91,115 @@ app.post("/api/login", (req, res) => {
     );
 });
 
-// Inicia o servidor
+// ======================================================
+// CADASTRO DE PRODUTOS
+// ======================================================
+
+app.post("/api/produtos", (req, res) => {
+
+    const {
+        nome,
+        descricao,
+        unidade,
+        quantidade
+    } = req.body;
+
+    // Validação dos campos obrigatórios
+    if (
+        !nome ||
+        !unidade ||
+        quantidade === undefined ||
+        quantidade === null
+    ) {
+        return res.status(400).json({
+            mensagem:
+                "Nome, unidade e quantidade são obrigatórios."
+        });
+    }
+
+    const quantidadeNumerica = Number(quantidade);
+
+    if (
+        Number.isNaN(quantidadeNumerica) ||
+        quantidadeNumerica < 0
+    ) {
+        return res.status(400).json({
+            mensagem:
+                "A quantidade deve ser um número maior ou igual a zero."
+        });
+    }
+
+    const sql = `
+        INSERT INTO produtos
+        (
+            nome,
+            descricao,
+            unidade,
+            quantidade,
+            ultima_atualizacao
+        )
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `;
+
+    db.run(
+        sql,
+        [
+            nome.trim(),
+            descricao ? descricao.trim() : "",
+            unidade.trim(),
+            quantidadeNumerica
+        ],
+        function (erro) {
+
+            if (erro) {
+                console.error(
+                    "Erro ao cadastrar produto:",
+                    erro
+                );
+
+                return res.status(500).json({
+                    mensagem:
+                        "Erro ao cadastrar produto."
+                });
+            }
+
+            return res.status(201).json({
+                mensagem:
+                    "Produto cadastrado com sucesso!",
+                produto: {
+                    id: this.lastID,
+                    nome: nome.trim(),
+                    descricao:
+                        descricao
+                            ? descricao.trim()
+                            : "",
+                    unidade: unidade.trim(),
+                    quantidade:
+                        quantidadeNumerica
+                }
+            });
+        }
+    );
+});
+
+// ======================================================
+// INICIA O SERVIDOR
+// ======================================================
+
 app.listen(PORT, "0.0.0.0", () => {
-    console.log("----------------------------------");
-    console.log("StockLanche iniciado com sucesso!");
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log("----------------------------------");
+    console.log(
+        "----------------------------------"
+    );
+
+    console.log(
+        "StockLanche iniciado com sucesso!"
+    );
+
+    console.log(
+        `Servidor rodando na porta ${PORT}`
+    );
+
+    console.log(
+        "----------------------------------"
+    );
 });

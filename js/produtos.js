@@ -2,36 +2,78 @@ const produtoForm = document.getElementById("produtoForm");
 const listaProdutos = document.getElementById("listaProdutos");
 const mensagemProduto = document.getElementById("mensagemProduto");
 
+const campoNome = document.getElementById("nome");
+const campoDescricao = document.getElementById("descricao");
+const campoUnidade = document.getElementById("unidade");
+const campoQuantidade = document.getElementById("quantidade");
+
 const btnSalvar = document.getElementById("btnSalvar");
 const btnCancelar = document.getElementById("btnCancelar");
 
-let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+// Mantém os produtos antigos funcionando durante a migração para a API
+let produtos = JSON.parse(
+    localStorage.getItem("produtos")
+) || [];
 
-let produtoEmEdicaoId = null;
+let produtoEmEdicao = null;
 
-function salvarProdutos() {
-    localStorage.setItem("produtos", JSON.stringify(produtos));
+
+// ======================================================
+// SALVAR PRODUTOS NO LOCALSTORAGE
+// ======================================================
+
+function salvarProdutosLocalmente() {
+    localStorage.setItem(
+        "produtos",
+        JSON.stringify(produtos)
+    );
 }
+
+
+// ======================================================
+// MOSTRAR MENSAGEM
+// ======================================================
+
+function mostrarMensagem(mensagem, tipo = "sucesso") {
+
+    mensagemProduto.textContent = mensagem;
+
+    if (tipo === "erro") {
+        mensagemProduto.style.color = "#c62828";
+    } else {
+        mensagemProduto.style.color = "#15803d";
+    }
+
+    setTimeout(() => {
+        mensagemProduto.textContent = "";
+    }, 3000);
+}
+
+
+// ======================================================
+// EXIBIR PRODUTOS NA TABELA
+// ======================================================
 
 function exibirProdutos() {
 
     listaProdutos.innerHTML = "";
 
-    produtos.forEach(function (produto) {
+    produtos.forEach((produto, index) => {
 
         const linha = document.createElement("tr");
 
         linha.innerHTML = `
-            <td>${produto.nome}</td>
-            <td>${produto.descricao}</td>
-            <td>${produto.unidade}</td>
-            <td>${produto.quantidade}</td>
+            <td>${produto.nome || ""}</td>
+            <td>${produto.descricao || ""}</td>
+            <td>${produto.unidade || ""}</td>
+            <td>${produto.quantidade ?? 0}</td>
 
             <td>
                 <button
                     type="button"
                     class="btn-editar"
-                    data-id="${produto.id}">
+                    data-index="${index}"
+                >
                     Editar
                 </button>
             </td>
@@ -41,24 +83,46 @@ function exibirProdutos() {
     });
 }
 
-function iniciarEdicao(id) {
 
-    const produto = produtos.find(function (item) {
-        return item.id === id;
-    });
+// ======================================================
+// LIMPAR FORMULÁRIO
+// ======================================================
+
+function limparFormulario() {
+
+    produtoForm.reset();
+
+    campoQuantidade.value = 0;
+
+    produtoEmEdicao = null;
+
+    btnSalvar.textContent = "+ Salvar Produto";
+
+    btnCancelar.hidden = true;
+}
+
+
+// ======================================================
+// INICIAR EDIÇÃO
+// ======================================================
+
+function iniciarEdicao(index) {
+
+    const produto = produtos[index];
 
     if (!produto) {
         return;
     }
 
-    produtoEmEdicaoId = id;
+    produtoEmEdicao = index;
 
-    document.getElementById("nome").value = produto.nome;
-    document.getElementById("descricao").value = produto.descricao;
-    document.getElementById("unidade").value = produto.unidade;
-    document.getElementById("quantidade").value = produto.quantidade;
+    campoNome.value = produto.nome || "";
+    campoDescricao.value = produto.descricao || "";
+    campoUnidade.value = produto.unidade || "";
+    campoQuantidade.value = produto.quantidade ?? 0;
 
     btnSalvar.textContent = "Salvar Alterações";
+
     btnCancelar.hidden = false;
 
     window.scrollTo({
@@ -67,112 +131,214 @@ function iniciarEdicao(id) {
     });
 }
 
+
+// ======================================================
+// CANCELAR EDIÇÃO
+// ======================================================
+
 function cancelarEdicao() {
 
-    produtoEmEdicaoId = null;
-
-    produtoForm.reset();
-
-    document.getElementById("quantidade").value = 0;
-
-    btnSalvar.textContent = "+ Salvar Produto";
-    btnCancelar.hidden = true;
+    limparFormulario();
 
     mensagemProduto.textContent = "";
 }
 
-produtoForm.addEventListener("submit", function (event) {
 
-    event.preventDefault();
+// ======================================================
+// CADASTRO / EDIÇÃO
+// ======================================================
 
-    const nome = document.getElementById("nome").value.trim();
-    const descricao = document.getElementById("descricao").value.trim();
-    const unidade = document.getElementById("unidade").value;
-    const quantidade = Number(document.getElementById("quantidade").value);
+produtoForm.addEventListener(
+    "submit",
+    async function (event) {
 
-    if (!nome || !descricao || !unidade || quantidade < 0) {
+        event.preventDefault();
 
-        mensagemProduto.textContent =
-            "Preencha corretamente todos os campos.";
+        const nome = campoNome.value.trim();
+        const descricao = campoDescricao.value.trim();
+        const unidade = campoUnidade.value;
+        const quantidade = Number(
+            campoQuantidade.value
+        );
 
-        return;
-    }
+        // Validação básica
+        if (
+            !nome ||
+            !descricao ||
+            !unidade ||
+            Number.isNaN(quantidade) ||
+            quantidade < 0
+        ) {
 
-    if (produtoEmEdicaoId !== null) {
+            mostrarMensagem(
+                "Preencha corretamente todos os campos.",
+                "erro"
+            );
 
-        const indice = produtos.findIndex(function (produto) {
-            return produto.id === produtoEmEdicaoId;
-        });
-
-        if (indice !== -1) {
-
-            produtos[indice].nome = nome;
-            produtos[indice].descricao = descricao;
-            produtos[indice].unidade = unidade;
-            produtos[indice].quantidade = quantidade;
-            produtos[indice].ultimaAtualizacao =
-                new Date().toLocaleDateString("pt-BR");
+            return;
         }
 
-        mensagemProduto.textContent =
-            "Produto atualizado com sucesso!";
 
-    } else {
+        // ==================================================
+        // EDIÇÃO LOCAL
+        // A integração da edição com a API será feita no API06
+        // ==================================================
 
-        let novoId = Date.now();
+        if (produtoEmEdicao !== null) {
 
-        while (produtos.some(function (produto) {
-            return produto.id === novoId;
-        })) {
-            novoId += 1;
+            produtos[produtoEmEdicao] = {
+                ...produtos[produtoEmEdicao],
+                nome,
+                descricao,
+                unidade,
+                quantidade
+            };
+
+            salvarProdutosLocalmente();
+
+            exibirProdutos();
+
+            limparFormulario();
+
+            mostrarMensagem(
+                "Produto atualizado com sucesso!"
+            );
+
+            return;
         }
 
-        const novoProduto = {
 
-            id: novoId,
-            nome: nome,
-            descricao: descricao,
-            unidade: unidade,
-            quantidade: quantidade,
+        // ==================================================
+        // NOVO PRODUTO - SALVA PELA API
+        // ==================================================
 
-            ultimaAtualizacao:
-                new Date().toLocaleDateString("pt-BR")
-        };
+        try {
 
-        produtos.push(novoProduto);
+            btnSalvar.disabled = true;
+            btnSalvar.textContent = "Salvando...";
 
-        mensagemProduto.textContent =
-            "Produto cadastrado com sucesso!";
+            const resposta = await fetch(
+                "/api/produtos",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        nome,
+                        descricao,
+                        unidade,
+                        quantidade
+                    })
+                }
+            );
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+
+                mostrarMensagem(
+                    dados.mensagem ||
+                    "Erro ao cadastrar produto.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+            // Produto retornado pelo banco/API
+            const novoProduto = {
+                id: dados.produto.id,
+                nome: dados.produto.nome,
+                descricao:
+                    dados.produto.descricao,
+                unidade:
+                    dados.produto.unidade,
+                quantidade:
+                    dados.produto.quantidade
+            };
+
+
+            // Mantém a interface atual funcionando
+            // até a implementação do API05
+            produtos.push(novoProduto);
+
+            salvarProdutosLocalmente();
+
+            exibirProdutos();
+
+            limparFormulario();
+
+            mostrarMensagem(
+                dados.mensagem ||
+                "Produto cadastrado com sucesso!"
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao cadastrar produto:",
+                erro
+            );
+
+            mostrarMensagem(
+                "Não foi possível conectar à API.",
+                "erro"
+            );
+
+        } finally {
+
+            btnSalvar.disabled = false;
+
+            if (produtoEmEdicao === null) {
+                btnSalvar.textContent =
+                    "+ Salvar Produto";
+            }
+        }
     }
+);
 
-    salvarProdutos();
 
-    exibirProdutos();
+// ======================================================
+// CLIQUE NO BOTÃO EDITAR
+// ======================================================
 
-    produtoForm.reset();
+listaProdutos.addEventListener(
+    "click",
+    function (event) {
 
-    document.getElementById("quantidade").value = 0;
+        if (
+            event.target.classList.contains(
+                "btn-editar"
+            )
+        ) {
 
-    produtoEmEdicaoId = null;
+            const index = Number(
+                event.target.dataset.index
+            );
 
-    btnSalvar.textContent = "+ Salvar Produto";
-    btnCancelar.hidden = true;
-
-    setTimeout(function () {
-        mensagemProduto.textContent = "";
-    }, 3000);
-});
-
-listaProdutos.addEventListener("click", function (event) {
-
-    if (event.target.classList.contains("btn-editar")) {
-
-        const id = Number(event.target.dataset.id);
-
-        iniciarEdicao(id);
+            iniciarEdicao(index);
+        }
     }
-});
+);
 
-btnCancelar.addEventListener("click", cancelarEdicao);
+
+// ======================================================
+// BOTÃO CANCELAR
+// ======================================================
+
+btnCancelar.addEventListener(
+    "click",
+    cancelarEdicao
+);
+
+
+// ======================================================
+// CARREGAMENTO INICIAL
+// ======================================================
 
 exibirProdutos();
